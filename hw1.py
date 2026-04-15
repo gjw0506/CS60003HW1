@@ -350,63 +350,63 @@ if __name__ == "__main__":
     np.random.seed(42)
 
     # # load ckpt
-    final_model = MLP(input_size=12288, hidden_size=256, output_size=10, activation='relu', weight_decay=0.01)
-    final_model.load_weights('best_model.npz')
+    # final_model = MLP(input_size=12288, hidden_size=256, output_size=10, activation='relu', weight_decay=0.01)
+    # final_model.load_weights('best_model.npz')
 
     
-    # # 1. 数据加载与预处理
+    # 1. 数据加载与预处理
     X, y, classes = load_data('EuroSAT_RGB')
-    # input_size = X.shape[1]   # 64*64*3 = 12288
-    # print(f"输入特征维度 (Input Size): {input_size}")
-    # output_size = len(classes)
+    input_size = X.shape[1]   # 64*64*3 = 12288
+    print(f"输入特征维度 (Input Size): {input_size}")
+    output_size = len(classes)
 
-    # # 划分数据集（train:val:test ≈ 70%:10%:20%）
+    # 划分数据集（train:val:test ≈ 70%:10%:20%）
     X_train_val, X_test, y_train_val, y_test = train_test_split(
         X, y, test_size=0.2, stratify=y, random_state=42)
-    # X_train, X_val, y_train, y_val = train_test_split(
-    #     X_train_val, y_train_val, test_size=0.125, stratify=y_train_val, random_state=42)
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_train_val, y_train_val, test_size=0.125, stratify=y_train_val, random_state=42)
 
-    # print(f"数据集划分完成 → Train: {X_train.shape[0]} | Val: {X_val.shape[0]} | Test: {X_test.shape[0]}")
+    print(f"数据集划分完成 → Train: {X_train.shape[0]} | Val: {X_val.shape[0]} | Test: {X_test.shape[0]}")
 
-    # # 2. 超参数查找（网格搜索）
-    # best_combo = hyperparameter_search(X_train, y_train, X_val, y_val, input_size, output_size)
-    # best_lr, best_hidden, best_wd = best_combo
+    # 2. 超参数查找（网格搜索）
+    best_combo = hyperparameter_search(X_train, y_train, X_val, y_val, input_size, output_size)
+    best_lr, best_hidden, best_wd = best_combo
 
-    # # 3. 使用最佳超参数重新训练
-    # print("\n 使用最佳超参数进行最终训练（生成报告所需曲线）...")
-    # final_model = MLP(input_size, best_hidden, output_size,
-    #                   activation='relu', weight_decay=best_wd)
-    # final_trainer = Trainer(final_model, lr=best_lr, lr_decay=0.95,
-    #                         batch_size=128, epochs=200)
-    # history, _ = final_trainer.train(X_train, y_train, X_val, y_val)
+    # 3. 使用最佳超参数重新训练
+    print("\n 使用最佳超参数进行最终训练（生成报告所需曲线）...")
+    final_model = MLP(input_size, best_hidden, output_size,
+                      activation='relu', weight_decay=best_wd)
+    final_trainer = Trainer(final_model, lr=best_lr, lr_decay=0.95,
+                            batch_size=128, epochs=200)
+    history, _ = final_trainer.train(X_train, y_train, X_val, y_val)
 
-    # # 保存最优权重
-    # final_model.save_weights('best_model.npz')
+    # 保存最优权重
+    final_model.save_weights('best_model.npz')
 
-    # epochs_range = range(1, len(history['train_loss']) + 1)
-    # plt.figure(figsize=(14, 5))
+    epochs_range = range(1, len(history['train_loss']) + 1)
+    plt.figure(figsize=(14, 5))
 
-    # plt.subplot(1, 2, 1)
-    # plt.plot(epochs_range, history['train_loss'], label='Train Loss', linewidth=2)
-    # plt.plot(epochs_range, history['val_loss'], label='Val Loss', linewidth=2)
-    # plt.title('train/val loss curves')
-    # plt.xlabel('Epoch')
-    # plt.ylabel('Loss')
-    # plt.legend()
-    # plt.grid(True)
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, history['train_loss'], label='Train Loss', linewidth=2)
+    plt.plot(epochs_range, history['val_loss'], label='Val Loss', linewidth=2)
+    plt.title('train/val loss curves')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
 
-    # plt.subplot(1, 2, 2)
-    # plt.plot(epochs_range, history['val_acc'], label='Val Accuracy', color='green', linewidth=2)
-    # plt.title('val accuracy ')
-    # plt.xlabel('Epoch')
-    # plt.ylabel('Accuracy')
-    # plt.legend()
-    # plt.grid(True)
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, history['val_acc'], label='Val Accuracy', color='green', linewidth=2)
+    plt.title('val accuracy ')
+    plt.xlabel('Epoch')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
 
-    # plt.tight_layout()
-    # plt.savefig('training_curves.png', dpi=200, bbox_inches='tight')
-    # plt.show()
-    # print("训练曲线已保存为 training_curves.png")
+    plt.tight_layout()
+    plt.savefig('training_curves.png', dpi=200, bbox_inches='tight')
+    plt.show()
+    print("训练曲线已保存为 training_curves.png")
 
     # # 5. 测试集评估 + 混淆矩阵 + 权重可视化 + 错例分析
     pred = evaluate_on_test(final_model, X_test, y_test, classes)
